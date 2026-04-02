@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TravelWeather</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="TravelWeather">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="favicon.png" type="image/png">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow-x: hidden; max-width: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif; background: #f5f4f0; color: #1a1a1a; min-height: 100vh; padding: 1.5rem 0.75rem; }
+  .app { max-width: 660px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #666; margin-bottom: 1.5rem; line-height: 1.6; }
+  .card { background: #fff; border-radius: 12px; border: 1px solid #e5e3dc; padding: 1.25rem; margin-bottom: 1rem; }
+  .section-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
+  .field-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; width: 100%; }
+  .field-row label { font-size: 14px; color: #555; white-space: nowrap; }
+
+  /* 行き先ブロック */
+  .stop-group { margin-bottom: 10px; }
+  .stop-block { border: 1px solid #ede9e0; border-radius: 10px; padding: 10px 12px; background: #faf9f6; margin-bottom: 4px; }
+  .stop-block.is-stopover { background: #f0f7ff; border-color: #c5ddf5; margin-left: 24px; }
+  .stop-block.is-home { background: #f0faf4; border-color: #a8dbb8; }
+  .stop-top { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 100%; width: 100%; }
+  .stop-label { font-size: 13px; color: #888; min-width: 28px; }
+  .stop-label.stopover-label { color: #2980b9; font-size: 11px; }
+  .stop-label.home-label { color: #27ae60; font-size: 13px; }
+  .nights-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .nights-wrap span { font-size: 13px; color: #555; }
+  .stop-dates { font-size: 12px; color: #999; margin-top: 5px; padding-left: 36px; }
+  .stop-dates.stopover-dates { color: #2980b9; }
+  .stop-dates.home-dates { color: #27ae60; }
+  .home-tag { font-size: 11px; color: #27ae60; background: #e8f8ee; border: 1px solid #a8dbb8; border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
+  .add-stopover-btn { font-size: 11px; color: #2980b9; background: none; border: 1px dashed #b8d4f0; border-radius: 6px; padding: 3px 10px; cursor: pointer; margin-left: 24px; margin-bottom: 2px; }
+  .add-stopover-btn:hover { background: #e8f3fd; }
+
+  input[type=text] { font-size: 14px; padding: 7px 10px; border-radius: 8px; border: 1px solid #d5d3cc; background: #fff; color: #1a1a1a; outline: none; max-width: 100%; }
+  input[type=date] { font-size: 14px; padding: 7px 10px; border-radius: 8px; border: 1px solid #d5d3cc; background: #fff; color: #1a1a1a; outline: none; width: 155px; }
+  input[type=number] { font-size: 14px; padding: 7px 8px; border-radius: 8px; border: 1px solid #d5d3cc; background: #fff; color: #1a1a1a; outline: none; width: 56px; text-align: center; }
+  input:focus { border-color: #888; }
+  .city-input { width: 130px; min-width: 80px; flex: 1 1 100px; max-width: 160px; }
+  .depart-input { width: 100%; max-width: 220px; }
+  .btn-remove { background: none; border: none; color: #ccc; cursor: pointer; font-size: 20px; line-height: 1; padding: 2px 6px; margin-left: auto; }
+  .btn-remove:hover { color: #e55; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 4px; width: 100%; }
+  .btn-add { flex: 1; padding: 8px; border: 1px dashed #ccc; border-radius: 8px; background: none; color: #888; font-size: 13px; cursor: pointer; }
+  .btn-add:hover { border-color: #999; color: #333; }
+  .btn-add-home { flex: 1; padding: 8px; border: 1px dashed #a8dbb8; border-radius: 8px; background: none; color: #27ae60; font-size: 13px; cursor: pointer; }
+  .btn-add-home:hover { background: #e8f8ee; border-color: #27ae60; }
+
+  .btn-primary { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #1a1a1a; color: #fff; font-size: 15px; font-weight: 500; cursor: pointer; margin-bottom: 1rem; }
+  .btn-primary:hover { background: #333; }
+
+  /* 結果カード */
+  .dest-block { background: #fff; border: 1px solid #e5e3dc; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+  .dest-block.is-stopover { border-color: #c5ddf5; background: #f8fbff; }
+  .dest-block.is-home { border-color: #a8dbb8; background: #f4fbf6; }
+  .dest-header { font-size: 16px; font-weight: 600; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f0ede4; }
+  .dest-block.is-stopover .dest-header { color: #1a6faa; border-bottom-color: #daeaf7; }
+  .dest-block.is-home .dest-header { color: #1e8449; border-bottom-color: #c8ecd4; }
+
+  /* 天気行 */
+  .day-row { padding: 14px 0; border-bottom: 1px solid #f0ede4; }
+  .day-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .day-name-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .day-name { font-size: 15px; font-weight: 600; }
+  .day-weather { font-size: 13px; color: #666; background: #f0ede4; padding: 2px 10px; border-radius: 20px; }
+
+  /* 気温・降水を大きく */
+  .temps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  @media (max-width: 480px) {
+    .temps { grid-template-columns: repeat(2, 1fr); }
+    .t-low  { order: 1; }
+    .t-prob { order: 2; }
+    .t-high { order: 3; }
+    .t-rain { order: 4; }
+  }
+  .t-item { background: #f7f6f2; border-radius: 8px; padding: 10px 12px; }
+  .t-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .t-val { font-size: 22px; font-weight: 700; }
+  .t-val.high { color: #c0392b; }
+  .t-val.low { color: #2980b9; }
+  .t-val.prob-high { color: #c0392b; }
+  .t-val.prob-mid { color: #e67e22; }
+  .t-val.prob-low { color: #2980b9; }
+
+  .advice-box { background: #f7f6f2; border-radius: 8px; padding: 12px 14px; }
+  .advice-text { font-size: 14px; line-height: 1.7; color: #333; margin-bottom: 8px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .b-warm { background: #fff3e0; color: #7c4a00; }
+  .b-cool { background: #e3f0fb; color: #0a4a82; }
+  .b-cold { background: #ede8fc; color: #3a2990; }
+  .b-rain { background: #e0f4ec; color: #0a5c3a; }
+
+  .loading { text-align: center; padding: 2rem; color: #888; font-size: 14px; }
+  .err { color: #c0392b; font-size: 13px; padding: 0.5rem 0; }
+  .hint { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🌤 旅のお天気・服装アドバイス</h1>
+  <p class="sub">出発地・行き先・泊数を入力するだけ。各日の天気と服装を提案します。</p>
+
+  <div class="card">
+    <div class="section-label">出発情報</div>
+    <div class="field-row">
+      <label>出発地：</label>
+      <input type="text" id="origin" class="depart-input" placeholder="例：横浜、東京、大阪" />
+    </div>
+    <div class="field-row">
+      <label>出発日：</label>
+      <input type="date" id="depart-date" />
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">行き先と泊数</div>
+    <p class="hint">泊まる場所は「泊数」を入力。チェックアウト日に立ち寄る場所は「＋ 立ち寄り追加」で追加できます。</p>
+    <div id="stops-container"></div>
+    <div class="btn-row">
+      <button class="btn-add" id="btn-add">＋ 行き先を追加</button>
+      <button class="btn-add-home" id="btn-add-home">🏠 帰宅日を追加</button>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="btn-check">天気と服装を確認する</button>
+  <div id="results"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  var weekdays = ['日','月','火','水','木','金','土'];
+  var stops = [
+    { id: 0, city: '', nights: 1, stopovers: [], isHome: false },
+    
+  ];
+  var nextId = 2;
+
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function getDepartDate() { return document.getElementById('depart-date').value || todayStr(); }
+  function getOrigin() { return document.getElementById('origin').value.trim() || '出発地'; }
+
+  function calcDates() {
+    var cur = new Date(getDepartDate() + 'T12:00:00');
+    return stops.map(function(s) {
+      var start = new Date(cur);
+      if (s.isHome) {
+        // 帰宅日：泊数なし、当日だけ
+        cur.setDate(cur.getDate() + 1);
+      } else {
+        cur.setDate(cur.getDate() + s.nights);
+      }
+      var checkout = new Date(cur);
+      return { start: start, checkout: checkout };
+    });
+  }
+
+  function fmtDate(d) {
+    return (d.getMonth()+1) + '/' + d.getDate() + '(' + weekdays[d.getDay()] + ')';
+  }
+
+  function getStopData() {
+    stops.forEach(function(s) {
+      if (!s.isHome) {
+        var c = document.getElementById('city-' + s.id);
+        var n = document.getElementById('nights-' + s.id);
+        if (c) s.city = c.value;
+        if (n) s.nights = Math.max(1, parseInt(n.value) || 1);
+      }
+      s.stopovers.forEach(function(sv) {
+        var sc = document.getElementById('city-sv-' + sv.id);
+        if (sc) sv.city = sc.value;
+      });
+    });
+  }
+
+  function updateDateLabels() {
+    getStopData();
+    var dates = calcDates();
+    stops.forEach(function(s, i) {
+      var el = document.getElementById('dates-' + s.id);
+      if (!el) return;
+      var start = dates[i].start;
+      if (s.isHome) {
+        el.textContent = '帰宅日：' + fmtDate(start);
+      } else {
+        var lastDay = new Date(dates[i].checkout);
+        lastDay.setDate(lastDay.getDate() - 1);
+        el.textContent = s.nights === 1
+          ? '滞在日：' + fmtDate(start)
+          : '滞在期間：' + fmtDate(start) + ' 〜 ' + fmtDate(lastDay);
+      }
+      s.stopovers.forEach(function(sv) {
+        var sel = document.getElementById('dates-sv-' + sv.id);
+        if (sel) sel.textContent = '立ち寄り日：' + fmtDate(dates[i].checkout);
+      });
+    });
+  }
+
+  function renderStops() {
+    var container = document.getElementById('stops-container');
+    var dates = calcDates();
+    var destCount = 0;
+
+    container.innerHTML = stops.map(function(s, i) {
+      var start = dates[i].start;
+      var checkoutDay = dates[i].checkout;
+
+      var removeBtn = stops.length > 1
+        ? '<button class="btn-remove" data-id="' + s.id + '" data-type="stop">×</button>' : '';
+
+      // 帰宅ブロック
+      if (s.isHome) {
+        return '<div class="stop-group">'
+          + '<div class="stop-block is-home">'
+          + '<div class="stop-top">'
+          + '<span class="stop-label home-label">🏠</span>'
+          + '<span style="font-size:14px;color:#1e8449;font-weight:500">' + getOrigin() + '</span>'
+          + '<span class="home-tag">帰宅</span>'
+          + removeBtn
+          + '</div>'
+          + '<div class="stop-dates home-dates" id="dates-' + s.id + '">帰宅日：' + fmtDate(start) + '</div>'
+          + '</div>'
+          + '</div>';
+      }
+
+      // 通常の行き先
+      destCount++;
+      var lastDay = new Date(checkoutDay);
+      lastDay.setDate(lastDay.getDate() - 1);
+      var dateLabel = s.nights === 1
+        ? '滞在日：' + fmtDate(start)
+        : '滞在期間：' + fmtDate(start) + ' 〜 ' + fmtDate(lastDay);
+
+      var stopoversHtml = s.stopovers.map(function(sv) {
+        return '<div class="stop-block is-stopover">'
+          + '<div class="stop-top">'
+          + '<span class="stop-label stopover-label">↳</span>'
+          + '<input type="text" id="city-sv-' + sv.id + '" class="city-input" placeholder="立ち寄り先（例：名古屋）" value="' + sv.city + '" />'
+          + '<span style="font-size:12px;color:#2980b9;white-space:nowrap">日帰り</span>'
+          + '<button class="btn-remove" data-id="' + sv.id + '" data-stopid="' + s.id + '" data-type="stopover">×</button>'
+          + '</div>'
+          + '<div class="stop-dates stopover-dates" id="dates-sv-' + sv.id + '">立ち寄り日：' + fmtDate(checkoutDay) + '</div>'
+          + '</div>';
+      }).join('');
+
+      return '<div class="stop-group">'
+        + '<div class="stop-block">'
+        + '<div class="stop-top">'
+        + '<span class="stop-label">' + destCount + '</span>'
+        + '<input type="text" id="city-' + s.id + '" class="city-input" placeholder="行き先（例：大阪）" value="' + s.city + '" />'
+        + '<div class="nights-wrap">'
+        + '<input type="number" id="nights-' + s.id + '" min="1" max="30" value="' + s.nights + '" data-id="' + s.id + '" />'
+        + '<span>泊</span>'
+        + '</div>'
+        + removeBtn
+        + '</div>'
+        + '<div class="stop-dates" id="dates-' + s.id + '">' + dateLabel + '</div>'
+        + '</div>'
+        + stopoversHtml
+        + '<button class="add-stopover-btn" data-id="' + s.id + '">＋ チェックアウト日に立ち寄りを追加</button>'
+        + '</div>';
+    }).join('');
+
+    // イベント：泊数変更
+    stops.forEach(function(s) {
+      var el = document.getElementById('nights-' + s.id);
+      if (el) {
+        el.addEventListener('change', updateDateLabels);
+        el.addEventListener('input', updateDateLabels);
+      }
+    });
+
+    // イベント：削除
+    container.querySelectorAll('.btn-remove').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        getStopData();
+        var type = this.getAttribute('data-type');
+        if (type === 'stop') {
+          var id = parseInt(this.getAttribute('data-id'));
+          stops = stops.filter(function(s) { return s.id !== id; });
+          renderStops();
+        } else if (type === 'stopover') {
+          var svId = parseInt(this.getAttribute('data-id'));
+          var stopId = parseInt(this.getAttribute('data-stopid'));
+          var s = stops.find(function(x) { return x.id === stopId; });
+          if (s) s.stopovers = s.stopovers.filter(function(sv) { return sv.id !== svId; });
+          renderStops();
+        }
+      });
+    });
+
+    // イベント：立ち寄り追加
+    container.querySelectorAll('.add-stopover-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        getStopData();
+        var stopId = parseInt(this.getAttribute('data-id'));
+        var s = stops.find(function(x) { return x.id === stopId; });
+        if (s) s.stopovers.push({ id: nextId++, city: '' });
+        renderStops();
+      });
+    });
+  }
+
+  function addStop() {
+    getStopData();
+    stops.push({ id: nextId++, city: '', nights: 1, stopovers: [], isHome: false });
+    renderStops();
+  }
+
+  function addHomeStop() {
+    getStopData();
+    stops.push({ id: nextId++, city: getOrigin(), nights: 1, stopovers: [], isHome: true });
+    renderStops();
+  }
+
+  // --- 座標辞書 ---
+  var cityCoords = {
+    '東京':{ lat:35.6762,lon:139.6503 },'横浜':{ lat:35.4437,lon:139.6380 },
+    '大阪':{ lat:34.6937,lon:135.5023 },'京都':{ lat:35.0116,lon:135.7681 },
+    '名古屋':{ lat:35.1815,lon:136.9066 },'神戸':{ lat:34.6913,lon:135.1830 },
+    '札幌':{ lat:43.0618,lon:141.3545 },'仙台':{ lat:38.2682,lon:140.8694 },
+    '福岡':{ lat:33.5904,lon:130.4017 },'広島':{ lat:34.3853,lon:132.4553 },
+    '那覇':{ lat:26.2124,lon:127.6809 },'沖縄':{ lat:26.2124,lon:127.6809 },
+    '金沢':{ lat:36.5613,lon:136.6562 },'新潟':{ lat:37.9161,lon:139.0364 },
+    '静岡':{ lat:34.9769,lon:138.3831 },'熊本':{ lat:32.7898,lon:130.7417 },
+    '鹿児島':{ lat:31.5966,lon:130.5571 },'長崎':{ lat:32.7503,lon:129.8777 },
+    '松山':{ lat:33.8416,lon:132.7657 },'高松':{ lat:34.3401,lon:134.0434 },
+    '高知':{ lat:33.5597,lon:133.5311 },'徳島':{ lat:34.0657,lon:134.5593 },
+    '岡山':{ lat:34.6618,lon:133.9344 },'奈良':{ lat:34.6851,lon:135.8050 },
+    '和歌山':{ lat:34.2260,lon:135.1675 },'岐阜':{ lat:35.4232,lon:136.7608 },
+    '富山':{ lat:36.6953,lon:137.2113 },'福井':{ lat:36.0652,lon:136.2216 },
+    '長野':{ lat:36.6486,lon:138.1951 },'宇都宮':{ lat:36.5551,lon:139.8828 },
+    '水戸':{ lat:36.3418,lon:140.4468 },'さいたま':{ lat:35.8617,lon:139.6455 },
+    '千葉':{ lat:35.6074,lon:140.1065 },'旭川':{ lat:43.7708,lon:142.3650 },
+    '函館':{ lat:41.7688,lon:140.7290 },'青森':{ lat:40.8244,lon:140.7400 },
+    '盛岡':{ lat:39.7036,lon:141.1527 },'秋田':{ lat:39.7186,lon:140.1024 },
+    '山形':{ lat:38.2404,lon:140.3634 },'福島':{ lat:37.7608,lon:140.4748 },
+    '浜松':{ lat:34.7107,lon:137.7261 },'姫路':{ lat:34.8150,lon:134.6853 },
+    '倉敷':{ lat:34.5850,lon:133.7726 },'北九州':{ lat:33.8834,lon:130.8751 },
+    '大分':{ lat:33.2382,lon:131.6126 },'宮崎':{ lat:31.9111,lon:131.4239 },
+    '佐賀':{ lat:33.2494,lon:130.2988 },'石垣':{ lat:24.3448,lon:124.1572 },
+    '宮古島':{ lat:24.8053,lon:125.2810 },
+    'バンコク':{ lat:13.7563,lon:100.5018 },'ソウル':{ lat:37.5665,lon:126.9780 },
+    '台北':{ lat:25.0330,lon:121.5654 },'香港':{ lat:22.3193,lon:114.1694 },
+    'シンガポール':{ lat:1.3521,lon:103.8198 },'ニューヨーク':{ lat:40.7128,lon:-74.0060 },
+    'ロンドン':{ lat:51.5074,lon:-0.1278 },'パリ':{ lat:48.8566,lon:2.3522 },
+    'ローマ':{ lat:41.9028,lon:12.4964 },'バルセロナ':{ lat:41.3851,lon:2.1734 },
+    'ハワイ':{ lat:21.3069,lon:-157.8583 },'ホノルル':{ lat:21.3069,lon:-157.8583 },
+    'シドニー':{ lat:-33.8688,lon:151.2093 },'バリ':{ lat:-8.3405,lon:115.0920 },
+    '上海':{ lat:31.2304,lon:121.4737 },'北京':{ lat:39.9042,lon:116.4074 },
+    'ハノイ':{ lat:21.0285,lon:105.8542 },'ホーチミン':{ lat:10.8231,lon:106.6297 },
+  };
+
+  function getCoords(city) {
+    if (cityCoords[city]) return Promise.resolve(cityCoords[city]);
+    return fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city) + '&count=1&language=ja')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d.results || !d.results.length)
+          throw new Error('「' + city + '」が見つかりません。別の表記でお試しください');
+        return { lat: d.results[0].latitude, lon: d.results[0].longitude };
+      });
+  }
+
+  function fetchWeather(lat, lon, startStr, endStr) {
+    var url = 'https://api.open-meteo.com/v1/forecast'
+      + '?latitude=' + lat + '&longitude=' + lon
+      + '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weathercode'
+      + '&timezone=auto&start_date=' + startStr + '&end_date=' + endStr;
+    return fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+      if (d.error) throw new Error('APIエラー：' + d.reason);
+      if (!d.daily || !d.daily.temperature_2m_max)
+        throw new Error('天気データが取得できませんでした（予報は16日先まで対応）');
+      return d.daily;
+    });
+  }
+
+  function weatherDesc(code) {
+    if (code === 0) return '快晴';
+    if (code <= 3) return '晴れ〜曇り';
+    if (code <= 49) return '霧';
+    if (code <= 67) return '雨';
+    if (code <= 77) return '雪・みぞれ';
+    if (code <= 82) return 'にわか雨';
+    if (code <= 99) return '雷雨';
+    return '−';
+  }
+
+  function getAdviceText(min, max, prob) {
+    var avg = (min + max) / 2;
+    var main, badges;
+    if (max >= 30) {
+      main = 'かなり暑い日。薄手で通気性の良い素材を。';
+      badges = [{label:'半袖でOK',cls:'b-warm'},{label:'リネン・コットン',cls:'b-warm'}];
+    } else if (avg >= 23) {
+      main = '暖かい日。半袖・ブラウスで快適。夜は1枚羽織れるものを。';
+      badges = [{label:'半袖・ブラウス',cls:'b-warm'},{label:'薄手カーディガン（夜）',cls:'b-cool'}];
+    } else if (avg >= 17) {
+      main = '過ごしやすい気温。長袖＋薄手の羽織りで快適。';
+      badges = [{label:'長袖・シャツ',cls:'b-cool'},{label:'薄手カーディガン',cls:'b-cool'}];
+    } else if (avg >= 12) {
+      main = 'やや肌寒い。ジャケットやミドルレイヤーを。';
+      badges = [{label:'ジャケット',cls:'b-cool'},{label:'重ね着で調節',cls:'b-cool'}];
+    } else if (avg >= 5) {
+      main = '寒い日。厚手コートとあたたかいインナーを。';
+      badges = [{label:'厚手コート必須',cls:'b-cold'},{label:'ニット・フリース',cls:'b-cold'}];
+    } else {
+      main = 'かなり寒い。防寒を万全に。マフラー・手袋も必携。';
+      badges = [{label:'ダウン・重コート',cls:'b-cold'},{label:'マフラー・手袋',cls:'b-cold'}];
+    }
+    if (prob >= 70) badges.push({label:'傘が必要（' + prob + '%）',cls:'b-rain'});
+    else if (prob >= 40) badges.push({label:'折り畳み傘あると安心（' + prob + '%）',cls:'b-rain'});
+    return { main: main, badges: badges };
+  }
+
+  function makeDayRow(dateStr, max, min, rain, prob, code) {
+    var d = new Date(dateStr + 'T00:00:00');
+    var dayLabel = (d.getMonth()+1) + '/' + d.getDate() + '(' + weekdays[d.getDay()] + ')';
+    var adv = getAdviceText(min, max, prob);
+    var probCls = prob >= 70 ? 'prob-high' : prob >= 40 ? 'prob-mid' : 'prob-low';
+    var bHtml = adv.badges.map(function(b) {
+      return '<span class="badge ' + b.cls + '">' + b.label + '</span>';
+    }).join('');
+    return '<div class="day-row">'
+      + '<div class="day-name-row">'
+      + '<span class="day-name">' + dayLabel + '</span>'
+      + '<span class="day-weather">' + weatherDesc(code) + '</span>'
+      + '</div>'
+      + '<div class="temps">'
+      + '<div class="t-item t-low"><div class="t-label">最低気温</div><div class="t-val low">' + min + '°C</div></div>'
+      + '<div class="t-item t-high"><div class="t-label">最高気温</div><div class="t-val high">' + max + '°C</div></div>'
+      + '<div class="t-item t-prob"><div class="t-label">降水確率</div><div class="t-val ' + probCls + '">' + prob + '%</div></div>'
+      + '<div class="t-item t-rain"><div class="t-label">降水量</div><div class="t-val">' + rain.toFixed(1) + '<span style="font-size:13px;font-weight:400">mm</span></div></div>'
+      + '</div>'
+      + '<div class="advice-box">'
+      + '<div class="advice-text">' + adv.main + '</div>'
+      + '<div class="badges">' + bHtml + '</div>'
+      + '</div></div>';
+  }
+
+  function getAdvice() {
+    getStopData();
+    var res = document.getElementById('results');
+    var departDate = getDepartDate();
+    var hasCity = stops.some(function(s) { return !s.isHome && s.city.trim(); });
+    if (!departDate) { res.innerHTML = '<p class="err">出発日を入力してください。</p>'; return; }
+    if (!hasCity) { res.innerHTML = '<p class="err">行き先を入力してください。</p>'; return; }
+
+    res.innerHTML = '<div class="loading">天気データを取得中...</div>';
+
+    var cur = new Date(departDate + 'T12:00:00');
+    var plan = stops.map(function(s) {
+      var startStr = cur.toISOString().slice(0, 10);
+      if (s.isHome) {
+        cur.setDate(cur.getDate() + 1);
+      } else {
+        cur.setDate(cur.getDate() + s.nights);
+      }
+      var checkoutStr = cur.toISOString().slice(0, 10);
+      return {
+        city: s.isHome ? getOrigin() : s.city.trim(),
+        nights: s.nights,
+        startStr: startStr,
+        checkoutStr: checkoutStr,
+        isHome: s.isHome,
+        stopovers: s.stopovers.filter(function(sv) { return sv.city.trim(); })
+      };
+    }).filter(function(p) { return p.city; });
+
+    Promise.all(plan.map(function(p) {
+      var endStr = p.isHome ? p.startStr : (function() {
+        var e = new Date(p.startStr + 'T12:00:00');
+        e.setDate(e.getDate() + p.nights - 1);
+        return e.toISOString().slice(0, 10);
+      })();
+
+      var mainPromise = getCoords(p.city).then(function(coords) {
+        return fetchWeather(coords.lat, coords.lon, p.startStr, endStr).then(function(daily) {
+          var dayRows = daily.time.map(function(dateStr, i) {
+            return makeDayRow(
+              dateStr,
+              Math.round(daily.temperature_2m_max[i]),
+              Math.round(daily.temperature_2m_min[i]),
+              daily.precipitation_sum[i] || 0,
+              daily.precipitation_probability_max[i] || 0,
+              daily.weathercode[i]
+            );
+          }).join('');
+
+          var blockClass = p.isHome ? 'dest-block is-home' : 'dest-block';
+          var icon = p.isHome ? '🏠 帰宅：' : '📍 ';
+          var nightsLabel = p.isHome ? '（帰宅日）' : '（' + p.nights + '泊）';
+          return '<div class="' + blockClass + '">'
+            + '<div class="dest-header">' + icon + p.city + nightsLabel + '</div>'
+            + dayRows + '</div>';
+        });
+      });
+
+      var stopoverPromises = p.stopovers.map(function(sv) {
+        return getCoords(sv.city).then(function(coords) {
+          return fetchWeather(coords.lat, coords.lon, p.checkoutStr, p.checkoutStr).then(function(daily) {
+            var row = makeDayRow(
+              p.checkoutStr,
+              Math.round(daily.temperature_2m_max[0]),
+              Math.round(daily.temperature_2m_min[0]),
+              daily.precipitation_sum[0] || 0,
+              daily.precipitation_probability_max[0] || 0,
+              daily.weathercode[0]
+            );
+            return '<div class="dest-block is-stopover">'
+              + '<div class="dest-header">🚶 立ち寄り：' + sv.city + '（日帰り）</div>'
+              + row + '</div>';
+          });
+        });
+      });
+
+      return Promise.all([mainPromise].concat(stopoverPromises)).then(function(r) { return r.join(''); });
+    })).then(function(blocks) {
+      res.innerHTML = blocks.join('');
+      res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }).catch(function(e) {
+      res.innerHTML = '<p class="err">エラー：' + e.message + '</p>';
+    });
+  }
+
+  document.getElementById('btn-add').addEventListener('click', addStop);
+  document.getElementById('btn-add-home').addEventListener('click', addHomeStop);
+  document.getElementById('btn-check').addEventListener('click', getAdvice);
+  document.getElementById('depart-date').addEventListener('change', updateDateLabels);
+  document.getElementById('origin').addEventListener('input', updateDateLabels);
+  document.getElementById('depart-date').value = todayStr();
+  renderStops();
+});
+</script>
+</body>
+</html>
