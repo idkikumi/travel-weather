@@ -36,12 +36,12 @@
   .stop-dates.stopover-dates { color: #2980b9; }
   .stop-dates.home-dates { color: #27ae60; }
   .home-tag { font-size: 11px; color: #27ae60; background: #e8f8ee; border: 1px solid #a8dbb8; border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
-  .add-stopover-btn { font-size: 11px; color: #2980b9; background: none; border: 1px dashed #b8d4f0; border-radius: 6px; padding: 3px 10px; cursor: pointer; margin-left: 24px; margin-bottom: 2px; }
-  .add-stopover-btn:hover { background: #e8f3fd; }
+  .add-stopover-btn { font-size: 12px; color: #8a6d4b; background: #fdf5ec; border: 1px solid #e8d5be; border-radius: 8px; padding: 6px 14px; cursor: pointer; margin-left: 24px; margin-bottom: 2px; font-weight: 500; white-space: nowrap; }
+  .add-stopover-btn:hover { background: #f9ead8; border-color: #d4b896; }
 
   input[type=text] { font-size: 16px; padding: 7px 10px; border-radius: 8px; border: 1px solid #d5d3cc; background: #fff; color: #1a1a1a; outline: none; max-width: 100%; }
   input[type=date] { font-size: 16px; padding: 7px 10px; border-radius: 8px; border: 1px solid #d5d3cc; background: #fff; color: #1a1a1a; outline: none; width: 155px; }
-  input[type=number] { font-size: 16px; padding: 7px 8px; border-radius: 8px; border: 1px solid #d5d3cc; background: #fff; color: #1a1a1a; outline: none; width: 56px; text-align: center; }
+  select.nights-select { font-size: 16px; padding: 7px 8px; border-radius: 8px; border: 1px solid #d5d3cc; background: #fff; color: #1a1a1a; outline: none; width: 62px; text-align: center; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 22px; }
   input:focus { border-color: #888; }
   .city-input { width: 130px; min-width: 80px; flex: 1 1 100px; max-width: 160px; }
   .depart-input { width: 100%; max-width: 220px; }
@@ -70,7 +70,7 @@
   .day-row:last-child { border-bottom: none; padding-bottom: 0; }
   .day-name-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .day-name { font-size: 15px; font-weight: 600; }
-  .day-weather { font-size: 13px; color: #666; background: #f0ede4; padding: 2px 10px; border-radius: 20px; }
+  .day-weather { font-size: 15px; font-weight: 600; color: #333; background: #f0ede4; padding: 4px 14px; border-radius: 20px; }
 
   /* 気温・降水を大きく */
   .temps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
@@ -100,7 +100,7 @@
   .b-rain { background: #e0f4ec; color: #0a5c3a; }
 
   .loading { text-align: center; padding: 2rem; color: #888; font-size: 14px; }
-  .err { color: #c0392b; font-size: 13px; padding: 0.5rem 0; }
+  .err { color: #c0392b; font-size: 14px; padding: 12px 16px; background: #fef2f2; border: 1px solid #f5c6c6; border-radius: 10px; }
   .hint { font-size: 12px; color: #aaa; margin-bottom: 10px; }
 </style>
 </head>
@@ -259,7 +259,9 @@ document.addEventListener('DOMContentLoaded', function() {
         + '<span class="stop-label">' + destCount + '</span>'
         + '<input type="text" id="city-' + s.id + '" class="city-input" placeholder="行き先（例：大阪）" value="' + s.city + '" />'
         + '<div class="nights-wrap">'
-        + '<input type="number" id="nights-' + s.id + '" min="1" max="30" value="' + s.nights + '" data-id="' + s.id + '" />'
+        + '<select id="nights-' + s.id + '" class="nights-select" data-id="' + s.id + '">'
+        + (function() { var opts = ''; for (var n = 1; n <= 30; n++) opts += '<option value="' + n + '"' + (n === s.nights ? ' selected' : '') + '>' + n + '</option>'; return opts; })()
+        + '</select>'
         + '<span>泊</span>'
         + '</div>'
         + removeBtn
@@ -267,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
         + '<div class="stop-dates" id="dates-' + s.id + '">' + dateLabel + '</div>'
         + '</div>'
         + stopoversHtml
-        + '<button class="add-stopover-btn" data-id="' + s.id + '">＋ チェックアウト日に立ち寄りを追加</button>'
+        + '<button class="add-stopover-btn" data-id="' + s.id + '">＋ チェックアウト日の立ち寄り場所を追加</button>'
         + '</div>';
     }).join('');
 
@@ -288,13 +290,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (type === 'stop') {
           var id = parseInt(this.getAttribute('data-id'));
           stops = stops.filter(function(s) { return s.id !== id; });
-          renderStops();
+          renderStops(); saveToStorage();
         } else if (type === 'stopover') {
           var svId = parseInt(this.getAttribute('data-id'));
           var stopId = parseInt(this.getAttribute('data-stopid'));
           var s = stops.find(function(x) { return x.id === stopId; });
           if (s) s.stopovers = s.stopovers.filter(function(sv) { return sv.id !== svId; });
-          renderStops();
+          renderStops(); saveToStorage();
         }
       });
     });
@@ -306,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var stopId = parseInt(this.getAttribute('data-id'));
         var s = stops.find(function(x) { return x.id === stopId; });
         if (s) s.stopovers.push({ id: nextId++, city: '' });
-        renderStops();
+        renderStops(); saveToStorage();
       });
     });
   }
@@ -359,6 +361,29 @@ document.addEventListener('DOMContentLoaded', function() {
     'シドニー':{ lat:-33.8688,lon:151.2093 },'バリ':{ lat:-8.3405,lon:115.0920 },
     '上海':{ lat:31.2304,lon:121.4737 },'北京':{ lat:39.9042,lon:116.4074 },
     'ハノイ':{ lat:21.0285,lon:105.8542 },'ホーチミン':{ lat:10.8231,lon:106.6297 },
+    // アジア
+    'プーケット':{ lat:7.8804,lon:98.3923 },'チェンマイ':{ lat:18.7883,lon:98.9853 },
+    'セブ':{ lat:10.3157,lon:123.8854 },'ダナン':{ lat:16.0544,lon:108.2022 },
+    'クアラルンプール':{ lat:3.1390,lon:101.6869 },'ジャカルタ':{ lat:-6.2088,lon:106.8456 },
+    'プサン':{ lat:35.1796,lon:129.0756 },'釜山':{ lat:35.1796,lon:129.0756 },
+    'チェジュ':{ lat:33.4996,lon:126.5312 },'済州':{ lat:33.4996,lon:126.5312 },
+    '高雄':{ lat:22.6273,lon:120.3014 },'マカオ':{ lat:22.1987,lon:113.5439 },
+    'マニラ':{ lat:14.5995,lon:120.9842 },
+    // 太平洋・オセアニア
+    'グアム':{ lat:13.4443,lon:144.7937 },'サイパン':{ lat:15.1850,lon:145.7545 },
+    'メルボルン':{ lat:-37.8136,lon:144.9631 },'ケアンズ':{ lat:-16.9186,lon:145.7781 },
+    'ゴールドコースト':{ lat:-28.0167,lon:153.4000 },'オークランド':{ lat:-36.8485,lon:174.7633 },
+    // ヨーロッパ
+    'ミュンヘン':{ lat:48.1351,lon:11.5820 },'ウィーン':{ lat:48.2082,lon:16.3738 },
+    'プラハ':{ lat:50.0755,lon:14.4378 },'アムステルダム':{ lat:52.3676,lon:4.9041 },
+    'イスタンブール':{ lat:41.0082,lon:28.9784 },'アテネ':{ lat:37.9838,lon:23.7275 },
+    'マドリード':{ lat:40.4168,lon:-3.7038 },'リスボン':{ lat:38.7223,lon:-9.1393 },
+    // 中東・アフリカ
+    'ドバイ':{ lat:25.2048,lon:55.2708 },'カイロ':{ lat:30.0444,lon:31.2357 },
+    // 北米・中南米
+    'ロサンゼルス':{ lat:34.0522,lon:-118.2437 },'サンフランシスコ':{ lat:37.7749,lon:-122.4194 },
+    'ラスベガス':{ lat:36.1699,lon:-115.1398 },'カンクン':{ lat:21.1619,lon:-86.8515 },
+    'バンクーバー':{ lat:49.2827,lon:-123.1207 },'トロント':{ lat:43.6532,lon:-79.3832 },
   };
 
   // --- 県名 → 県庁所在地の座標（cityCoords に同名エントリがない県のみ） ---
@@ -383,23 +408,68 @@ document.addEventListener('DOMContentLoaded', function() {
     '岩手':{ lat:39.7036,lon:141.1527 },     // 盛岡
   };
 
+  // --- ローマ字 → 日本語変換辞書 ---
+  var romajiMap = {
+    'tokyo':'東京','yokohama':'横浜','osaka':'大阪','kyoto':'京都',
+    'nagoya':'名古屋','kobe':'神戸','sapporo':'札幌','sendai':'仙台',
+    'fukuoka':'福岡','hiroshima':'広島','naha':'那覇','okinawa':'沖縄',
+    'kanazawa':'金沢','niigata':'新潟','shizuoka':'静岡','kumamoto':'熊本',
+    'kagoshima':'鹿児島','nagasaki':'長崎','matsuyama':'松山','takamatsu':'高松',
+    'kochi':'高知','tokushima':'徳島','okayama':'岡山','nara':'奈良',
+    'wakayama':'和歌山','gifu':'岐阜','toyama':'富山','fukui':'福井',
+    'nagano':'長野','utsunomiya':'宇都宮','mito':'水戸','saitama':'さいたま',
+    'chiba':'千葉','asahikawa':'旭川','hakodate':'函館','aomori':'青森',
+    'morioka':'盛岡','akita':'秋田','yamagata':'山形','fukushima':'福島',
+    'hamamatsu':'浜松','himeji':'姫路','kurashiki':'倉敷','kitakyushu':'北九州',
+    'oita':'大分','miyazaki':'宮崎','saga':'佐賀','ishigaki':'石垣',
+    'miyakojima':'宮古島',
+    // 都道府県名（ローマ字）
+    'hokkaido':'北海道','aichi':'愛知','mie':'三重','shiga':'滋賀',
+    'hyogo':'兵庫','tottori':'鳥取','shimane':'島根','yamaguchi':'山口',
+    'kagawa':'香川','ehime':'愛媛','gunma':'群馬','tochigi':'栃木',
+    'ibaraki':'茨城','kanagawa':'神奈川','ishikawa':'石川',
+    'miyagi':'宮城','iwate':'岩手',
+    // 海外都市（ローマ字 / 英語表記）
+    'bangkok':'バンコク','seoul':'ソウル','taipei':'台北','hongkong':'香港',
+    'singapore':'シンガポール','newyork':'ニューヨーク','london':'ロンドン',
+    'paris':'パリ','rome':'ローマ','roma':'ローマ','barcelona':'バルセロナ',
+    'hawaii':'ハワイ','honolulu':'ホノルル','sydney':'シドニー','bali':'バリ',
+    'shanghai':'上海','beijing':'北京','hanoi':'ハノイ','hochiminh':'ホーチミン',
+    'phuket':'プーケット','chiangmai':'チェンマイ','cebu':'セブ','danang':'ダナン',
+    'kualalumpur':'クアラルンプール','jakarta':'ジャカルタ','busan':'プサン',
+    'jeju':'チェジュ','kaohsiung':'高雄','macau':'マカオ','macao':'マカオ',
+    'manila':'マニラ','guam':'グアム','saipan':'サイパン','melbourne':'メルボルン',
+    'cairns':'ケアンズ','goldcoast':'ゴールドコースト','auckland':'オークランド',
+    'munich':'ミュンヘン','vienna':'ウィーン','prague':'プラハ',
+    'amsterdam':'アムステルダム','istanbul':'イスタンブール','athens':'アテネ',
+    'madrid':'マドリード','lisbon':'リスボン','dubai':'ドバイ','cairo':'カイロ',
+    'losangeles':'ロサンゼルス','sanfrancisco':'サンフランシスコ',
+    'lasvegas':'ラスベガス','cancun':'カンクン','vancouver':'バンクーバー',
+    'toronto':'トロント',
+  };
+
   function normalizeCityName(name) {
+    // ローマ字入力を日本語に変換
+    var lower = name.toLowerCase().replace(/[\s\-_]/g, '');
+    if (romajiMap[lower]) return romajiMap[lower];
     if (name === '北海道') return '北海道';
     return name.replace(/[県府都道市町村]$/, '');
   }
 
   function getCoords(city) {
     var normalized = normalizeCityName(city);
-    if (cityCoords[normalized]) return Promise.resolve(cityCoords[normalized]);
-    if (prefectureCoords[normalized]) return Promise.resolve(prefectureCoords[normalized]);
-    if (city !== normalized && cityCoords[city]) return Promise.resolve(cityCoords[city]);
-    if (city !== normalized && prefectureCoords[city]) return Promise.resolve(prefectureCoords[city]);
+    if (cityCoords[normalized]) return Promise.resolve({ lat: cityCoords[normalized].lat, lon: cityCoords[normalized].lon, displayName: normalized });
+    if (prefectureCoords[normalized]) return Promise.resolve({ lat: prefectureCoords[normalized].lat, lon: prefectureCoords[normalized].lon, displayName: normalized });
+    if (cityCoords[city]) return Promise.resolve({ lat: cityCoords[city].lat, lon: cityCoords[city].lon, displayName: city });
+    if (prefectureCoords[city]) return Promise.resolve({ lat: prefectureCoords[city].lat, lon: prefectureCoords[city].lon, displayName: city });
     return fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city) + '&count=1&language=ja')
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (!d.results || !d.results.length)
           throw new Error('「' + city + '」が見つかりません。都市名を「市」なしで入力してください（例：名古屋、小樽、下呂）。都道府県名でも検索できます（例：愛知、北海道）');
-        return { lat: d.results[0].latitude, lon: d.results[0].longitude };
+        var r = d.results[0];
+        var name = (r.name || city).replace(/[市町村区]$/, '');
+        return { lat: r.latitude, lon: r.longitude, displayName: name };
       });
   }
 
@@ -417,13 +487,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function weatherDesc(code) {
-    if (code === 0) return '快晴';
-    if (code <= 3) return '晴れ〜曇り';
-    if (code <= 49) return '霧';
-    if (code <= 67) return '雨';
-    if (code <= 77) return '雪・みぞれ';
-    if (code <= 82) return 'にわか雨';
-    if (code <= 99) return '雷雨';
+    if (code === 0) return '☀️ 快晴';
+    if (code <= 3) return '🌤 晴れ〜曇り';
+    if (code <= 49) return '🌫 霧';
+    if (code <= 67) return '🌧 雨';
+    if (code <= 77) return '❄️ 雪・みぞれ';
+    if (code <= 82) return '🌦 にわか雨';
+    if (code <= 99) return '⛈ 雷雨';
     return '−';
   }
 
@@ -479,13 +549,27 @@ document.addEventListener('DOMContentLoaded', function() {
       + '</div></div>';
   }
 
+  function showError(el, msg) {
+    el.innerHTML = '<p class="err">' + msg + '</p>';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   function getAdvice() {
     getStopData();
     var res = document.getElementById('results');
     var departDate = getDepartDate();
     var hasCity = stops.some(function(s) { return !s.isHome && s.city.trim(); });
-    if (!departDate) { res.innerHTML = '<p class="err">出発日を入力してください。</p>'; return; }
-    if (!hasCity) { res.innerHTML = '<p class="err">行き先を入力してください。</p>'; return; }
+    if (!departDate) { showError(res, '出発日を入力してください。'); return; }
+    if (!hasCity) { showError(res, '行き先を入力してください。'); return; }
+
+    var totalNights = stops.reduce(function(sum, s) { return sum + (s.isHome ? 1 : s.nights); }, 0);
+    var today = new Date(todayStr() + 'T12:00:00');
+    var depart = new Date(departDate + 'T12:00:00');
+    var daysFromToday = Math.round((depart - today) / 86400000);
+    if (daysFromToday + totalNights > 16) {
+      showError(res, '天気予報は今日から16日先までしか取得できません。旅程の後半が予報範囲外になる可能性があります。出発日を近づけるか、泊数を減らしてお試しください。');
+      return;
+    }
 
     res.innerHTML = '<div class="loading">天気データを取得中...</div>';
 
@@ -508,7 +592,40 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     }).filter(function(p) { return p.city; });
 
-    Promise.all(plan.map(function(p) {
+    // 旅程全体の天気統計を集計するための配列
+    var tripStats = { mins: [], maxs: [], probs: [], codes: [] };
+
+    function collectStats(daily) {
+      for (var i = 0; i < daily.time.length; i++) {
+        tripStats.mins.push(Math.round(daily.temperature_2m_min[i]));
+        tripStats.maxs.push(Math.round(daily.temperature_2m_max[i]));
+        tripStats.probs.push(daily.precipitation_probability_max[i] || 0);
+        tripStats.codes.push(daily.weathercode[i]);
+      }
+    }
+
+    var originCity = getOrigin();
+    var originPromise = (originCity && originCity !== '出発地')
+      ? getCoords(originCity).then(function(coords) {
+          var originDateStr = plan.length ? plan[0].startStr : departDate;
+          return fetchWeather(coords.lat, coords.lon, originDateStr, originDateStr).then(function(daily) {
+            collectStats(daily);
+            var row = makeDayRow(
+              originDateStr,
+              Math.round(daily.temperature_2m_max[0]),
+              Math.round(daily.temperature_2m_min[0]),
+              daily.precipitation_sum[0] || 0,
+              daily.precipitation_probability_max[0] || 0,
+              daily.weathercode[0]
+            );
+            return '<div class="dest-block">'
+              + '<div class="dest-header">🚀 出発：' + coords.displayName + '（出発日）</div>'
+              + row + '</div>';
+          });
+        })
+      : Promise.resolve('');
+
+    Promise.all([originPromise].concat(plan.map(function(p) {
       var endStr = p.isHome ? p.startStr : (function() {
         var e = new Date(p.startStr + 'T12:00:00');
         e.setDate(e.getDate() + p.nights - 1);
@@ -516,7 +633,9 @@ document.addEventListener('DOMContentLoaded', function() {
       })();
 
       var mainPromise = getCoords(p.city).then(function(coords) {
+        var displayCity = coords.displayName;
         return fetchWeather(coords.lat, coords.lon, p.startStr, endStr).then(function(daily) {
+          collectStats(daily);
           var dayRows = daily.time.map(function(dateStr, i) {
             return makeDayRow(
               dateStr,
@@ -532,14 +651,16 @@ document.addEventListener('DOMContentLoaded', function() {
           var icon = p.isHome ? '🏠 帰宅：' : '📍 ';
           var nightsLabel = p.isHome ? '（帰宅日）' : '（' + p.nights + '泊）';
           return '<div class="' + blockClass + '">'
-            + '<div class="dest-header">' + icon + p.city + nightsLabel + '</div>'
+            + '<div class="dest-header">' + icon + displayCity + nightsLabel + '</div>'
             + dayRows + '</div>';
         });
       });
 
       var stopoverPromises = p.stopovers.map(function(sv) {
         return getCoords(sv.city).then(function(coords) {
+          var displaySv = coords.displayName;
           return fetchWeather(coords.lat, coords.lon, p.checkoutStr, p.checkoutStr).then(function(daily) {
+            collectStats(daily);
             var row = makeDayRow(
               p.checkoutStr,
               Math.round(daily.temperature_2m_max[0]),
@@ -549,27 +670,109 @@ document.addEventListener('DOMContentLoaded', function() {
               daily.weathercode[0]
             );
             return '<div class="dest-block is-stopover">'
-              + '<div class="dest-header">🚶 立ち寄り：' + sv.city + '（日帰り）</div>'
+              + '<div class="dest-header">🚶 立ち寄り：' + displaySv + '（日帰り）</div>'
               + row + '</div>';
           });
         });
       });
 
       return Promise.all([mainPromise].concat(stopoverPromises)).then(function(r) { return r.join(''); });
-    })).then(function(blocks) {
-      res.innerHTML = blocks.join('');
+    }))).then(function(blocks) {
+      var html = '';
+
+      // 出発地未入力ヒント
+      if (!originCity || originCity === '出発地') {
+        html += '<div class="dest-block" style="background:#fffbe6;border-color:#f0e0a0">'
+          + '<div style="font-size:13px;color:#8a7000;padding:4px 0">💡 出発地を入力すると、出発日の天気も確認できます</div></div>';
+      }
+
+      html += blocks.join('');
+
+      // 旅程全体の荷造りサマリー（APIデータから直接集計）
+      if (tripStats.mins.length > 0) {
+        var tripMin = Math.min.apply(null, tripStats.mins);
+        var tripMax = Math.max.apply(null, tripStats.maxs);
+        var rainDays = tripStats.probs.filter(function(p) { return p >= 40; }).length;
+        var rainyCodeDays = tripStats.codes.filter(function(c) { return c >= 50; }).length;
+        var rainCount = Math.max(rainDays, rainyCodeDays);
+        var summaryLines = [];
+        summaryLines.push('旅行全体の気温幅：<strong>' + tripMin + '°C 〜 ' + tripMax + '°C</strong>');
+        var range = tripMax - tripMin;
+        if (range >= 15) {
+          summaryLines.push('気温差がかなり大きいです。重ね着で調節できる服装がおすすめです。');
+        } else if (range >= 8) {
+          summaryLines.push('気温差があります。脱ぎ着しやすい服装を心がけましょう。');
+        }
+        if (rainCount > 0) {
+          summaryLines.push('雨の予報が <strong>' + rainCount + '日</strong> あります。折り畳み傘を忘れずに。');
+        } else {
+          summaryLines.push('雨の心配は少なそうです。');
+        }
+        if (tripMin < 5) summaryLines.push('冷え込む日があります。マフラー・手袋など防寒小物も荷物に入れましょう。');
+        if (tripMax >= 30) summaryLines.push('暑い日があります。日焼け止め・帽子・水分補給をお忘れなく。');
+
+        html += '<div class="dest-block" style="background:#f0f4ff;border-color:#b8c9e8">'
+          + '<div class="dest-header">🧳 荷造りアドバイス</div>'
+          + '<div class="advice-box" style="background:#e8eef8">'
+          + '<div class="advice-text">' + summaryLines.join('<br>') + '</div>'
+          + '</div></div>';
+      }
+
+      res.innerHTML = html;
       res.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }).catch(function(e) {
-      res.innerHTML = '<p class="err">エラー：' + e.message + '</p>';
+      showError(res, 'エラー：' + e.message);
     });
   }
 
-  document.getElementById('btn-add').addEventListener('click', addStop);
-  document.getElementById('btn-add-home').addEventListener('click', addHomeStop);
-  document.getElementById('btn-check').addEventListener('click', getAdvice);
-  document.getElementById('depart-date').addEventListener('change', updateDateLabels);
-  document.getElementById('origin').addEventListener('input', updateDateLabels);
-  document.getElementById('depart-date').value = todayStr();
+  // --- LocalStorage 保存・復元 ---
+  var STORAGE_KEY = 'travelWeatherData';
+
+  function saveToStorage() {
+    getStopData();
+    var data = {
+      origin: document.getElementById('origin').value,
+      departDate: document.getElementById('depart-date').value,
+      stops: stops
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  }
+
+  function loadFromStorage() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      var data = JSON.parse(raw);
+      if (data.origin) document.getElementById('origin').value = data.origin;
+      if (data.departDate) document.getElementById('depart-date').value = data.departDate;
+      if (data.stops && data.stops.length) {
+        stops = data.stops;
+        var maxId = 0;
+        stops.forEach(function(s) {
+          if (s.id >= maxId) maxId = s.id + 1;
+          (s.stopovers || []).forEach(function(sv) {
+            if (sv.id >= maxId) maxId = sv.id + 1;
+          });
+        });
+        nextId = maxId;
+      }
+      return true;
+    } catch(e) { return false; }
+  }
+
+  document.getElementById('btn-add').addEventListener('click', function() { addStop(); saveToStorage(); });
+  document.getElementById('btn-add-home').addEventListener('click', function() { addHomeStop(); saveToStorage(); });
+  document.getElementById('btn-check').addEventListener('click', function() { saveToStorage(); getAdvice(); });
+  document.getElementById('depart-date').addEventListener('change', function() { updateDateLabels(); saveToStorage(); });
+  document.getElementById('origin').addEventListener('input', function() { updateDateLabels(); saveToStorage(); });
+
+  // 入力変更時に自動保存（泊数・都市名など）
+  document.getElementById('stops-container').addEventListener('input', function() { saveToStorage(); });
+
+  // 初期化：LocalStorageから復元、なければデフォルト
+  if (!loadFromStorage()) {
+    document.getElementById('depart-date').value = todayStr();
+  }
   renderStops();
 });
 </script>
