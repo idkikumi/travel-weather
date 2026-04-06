@@ -24,16 +24,16 @@
   /* 行き先ブロック */
   .stop-group { margin-bottom: 10px; }
   .stop-block { border: 1px solid #ede9e0; border-radius: 10px; padding: 10px 12px; background: #faf9f6; margin-bottom: 4px; }
-  .stop-block.is-stopover { background: #f0f7ff; border-color: #c5ddf5; margin-left: 24px; }
+  .stop-block.is-stopover { background: #fdf5ec; border-color: #e8d5be; margin-left: 24px; }
   .stop-block.is-home { background: #f0faf4; border-color: #a8dbb8; }
   .stop-top { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; max-width: 100%; width: 100%; }
   .stop-label { font-size: 13px; color: #888; min-width: 28px; }
-  .stop-label.stopover-label { color: #2980b9; font-size: 11px; }
+  .stop-label.stopover-label { color: #8a6d4b; font-size: 11px; }
   .stop-label.home-label { color: #27ae60; font-size: 13px; }
   .nights-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
   .nights-wrap span { font-size: 13px; color: #555; }
   .stop-dates { font-size: 12px; color: #999; margin-top: 5px; padding-left: 36px; }
-  .stop-dates.stopover-dates { color: #2980b9; }
+  .stop-dates.stopover-dates { color: #8a6d4b; }
   .stop-dates.home-dates { color: #27ae60; }
   .home-tag { font-size: 11px; color: #27ae60; background: #e8f8ee; border: 1px solid #a8dbb8; border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
   .add-stopover-btn { font-size: 12px; color: #8a6d4b; background: #fdf5ec; border: 1px solid #e8d5be; border-radius: 8px; padding: 6px 14px; cursor: pointer; margin-left: 24px; margin-bottom: 2px; font-weight: 500; white-space: nowrap; }
@@ -59,10 +59,10 @@
 
   /* 結果カード */
   .dest-block { background: #fff; border: 1px solid #e5e3dc; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
-  .dest-block.is-stopover { border-color: #c5ddf5; background: #f8fbff; }
+  .dest-block.is-stopover { border-color: #e8d5be; background: #fdf8f2; }
   .dest-block.is-home { border-color: #a8dbb8; background: #f4fbf6; }
   .dest-header { font-size: 16px; font-weight: 600; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f0ede4; }
-  .dest-block.is-stopover .dest-header { color: #1a6faa; border-bottom-color: #daeaf7; }
+  .dest-block.is-stopover .dest-header { color: #8a6d4b; border-bottom-color: #e8d5be; }
   .dest-block.is-home .dest-header { color: #1e8449; border-bottom-color: #c8ecd4; }
 
   /* 天気行 */
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
           + '<div class="stop-top">'
           + '<span class="stop-label stopover-label">↳</span>'
           + '<input type="text" id="city-sv-' + sv.id + '" class="city-input" placeholder="立ち寄り先（例：名古屋）" value="' + sv.city + '" />'
-          + '<span style="font-size:12px;color:#2980b9;white-space:nowrap">日帰り</span>'
+          + '<span style="font-size:12px;color:#8a6d4b;white-space:nowrap">日帰り</span>'
           + '<button class="btn-remove" data-id="' + sv.id + '" data-stopid="' + s.id + '" data-type="stopover">×</button>'
           + '</div>'
           + '<div class="stop-dates stopover-dates" id="dates-sv-' + sv.id + '">立ち寄り日：' + fmtDate(checkoutDay) + '</div>'
