@@ -361,13 +361,44 @@ document.addEventListener('DOMContentLoaded', function() {
     'ハノイ':{ lat:21.0285,lon:105.8542 },'ホーチミン':{ lat:10.8231,lon:106.6297 },
   };
 
+  // --- 県名 → 県庁所在地の座標（cityCoords に同名エントリがない県のみ） ---
+  var prefectureCoords = {
+    '北海道':{ lat:43.0618,lon:141.3545 },   // 札幌
+    '愛知':{ lat:35.1815,lon:136.9066 },     // 名古屋
+    '三重':{ lat:34.7303,lon:136.5086 },     // 津
+    '滋賀':{ lat:35.0045,lon:135.8686 },     // 大津
+    '兵庫':{ lat:34.6913,lon:135.1830 },     // 神戸
+    '鳥取':{ lat:35.5039,lon:134.2381 },     // 鳥取市
+    '島根':{ lat:35.4723,lon:133.0505 },     // 松江
+    '山口':{ lat:34.1861,lon:131.4706 },     // 山口市
+    '香川':{ lat:34.3401,lon:134.0434 },     // 高松
+    '愛媛':{ lat:33.8416,lon:132.7657 },     // 松山
+    '群馬':{ lat:36.3912,lon:139.0608 },     // 前橋
+    '栃木':{ lat:36.5551,lon:139.8828 },     // 宇都宮
+    '茨城':{ lat:36.3418,lon:140.4468 },     // 水戸
+    '埼玉':{ lat:35.8617,lon:139.6455 },     // さいたま
+    '神奈川':{ lat:35.4437,lon:139.6380 },   // 横浜
+    '石川':{ lat:36.5613,lon:136.6562 },     // 金沢
+    '宮城':{ lat:38.2682,lon:140.8694 },     // 仙台
+    '岩手':{ lat:39.7036,lon:141.1527 },     // 盛岡
+  };
+
+  function normalizeCityName(name) {
+    if (name === '北海道') return '北海道';
+    return name.replace(/[県府都道市町村]$/, '');
+  }
+
   function getCoords(city) {
-    if (cityCoords[city]) return Promise.resolve(cityCoords[city]);
+    var normalized = normalizeCityName(city);
+    if (cityCoords[normalized]) return Promise.resolve(cityCoords[normalized]);
+    if (prefectureCoords[normalized]) return Promise.resolve(prefectureCoords[normalized]);
+    if (city !== normalized && cityCoords[city]) return Promise.resolve(cityCoords[city]);
+    if (city !== normalized && prefectureCoords[city]) return Promise.resolve(prefectureCoords[city]);
     return fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city) + '&count=1&language=ja')
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (!d.results || !d.results.length)
-          throw new Error('「' + city + '」が見つかりません。別の表記でお試しください');
+          throw new Error('「' + city + '」が見つかりません。都市名を「市」なしで入力してください（例：名古屋、小樽、下呂）。都道府県名でも検索できます（例：愛知、北海道）');
         return { lat: d.results[0].latitude, lon: d.results[0].longitude };
       });
   }
