@@ -4,14 +4,26 @@ export async function onRequest(context) {
 
   const apiUrl = 'https://geocoding-api.open-meteo.com/v1/search?' + params.toString();
 
-  const response = await fetch(apiUrl);
-  const data = await response.text();
+  try {
+    const response = await fetch(new Request(apiUrl, {
+      headers: { 'User-Agent': 'travel-weather-app' },
+    }));
+    const data = await response.text();
 
-  return new Response(data, {
-    status: response.status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
+    return new Response(data, {
+      status: response.status,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: true, reason: e.message }), {
+      status: 502,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
 }
