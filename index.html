@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (prefectureCoords[normalized]) return Promise.resolve({ lat: prefectureCoords[normalized].lat, lon: prefectureCoords[normalized].lon, displayName: normalized });
     if (cityCoords[city]) return Promise.resolve({ lat: cityCoords[city].lat, lon: cityCoords[city].lon, displayName: city });
     if (prefectureCoords[city]) return Promise.resolve({ lat: prefectureCoords[city].lat, lon: prefectureCoords[city].lon, displayName: city });
-    return fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city) + '&count=1&language=ja')
+    return fetch('/api/geocoding?name=' + encodeURIComponent(city) + '&count=1&language=ja')
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (!d.results || !d.results.length)
@@ -474,7 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function fetchWeather(lat, lon, startStr, endStr) {
-    var url = 'https://api.open-meteo.com/v1/forecast'
+    var url = '/api/weather'
       + '?latitude=' + lat + '&longitude=' + lon
       + '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weathercode'
       + '&timezone=auto&start_date=' + startStr + '&end_date=' + endStr;
